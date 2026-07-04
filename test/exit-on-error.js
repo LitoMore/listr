@@ -15,7 +15,7 @@ const tasks = [
 ];
 
 test.serial('exit on error', async t => {
-	t.plan(5);
+	t.plan(6);
 
 	const list = new Listr(tasks, {
 		renderer: SimpleRenderer,
@@ -28,15 +28,13 @@ test.serial('exit on error', async t => {
 		'done',
 	]);
 
-	try {
-		await list.run();
-	} catch (error) {
-		t.is(error.message, 'Something went wrong');
-	}
+	const error = await t.throwsAsync(list.run());
+
+	t.is(error.message, 'Something went wrong');
 });
 
 test.serial('set `exitOnError` to false', async t => {
-	t.plan(8);
+	t.plan(9);
 
 	const list = new Listr(tasks, {
 		exitOnError: false,
@@ -52,16 +50,14 @@ test.serial('set `exitOnError` to false', async t => {
 		'done',
 	]);
 
-	try {
-		await list.run();
-	} catch (error) {
-		t.is(error.message, 'Something went wrong');
-		t.is(error.errors.length, 1);
-	}
+	const error = await t.throwsAsync(list.run());
+
+	t.is(error.message, 'Something went wrong');
+	t.is(error.errors.length, 1);
 });
 
 test.serial('set `exitOnError` to false in nested list', async t => {
-	t.plan(15);
+	t.plan(16);
 
 	const list = new Listr([
 		{
@@ -106,17 +102,15 @@ test.serial('set `exitOnError` to false in nested list', async t => {
 		'done',
 	]);
 
-	try {
-		await list.run();
-	} catch (error) {
-		t.is(error.message, 'Something went wrong');
-		t.is(error.errors.length, 1);
-		t.is(error.errors[0].message, 'Unicorn failed');
-	}
+	const error = await t.throwsAsync(list.run());
+
+	t.is(error.message, 'Something went wrong');
+	t.is(error.errors.length, 1);
+	t.is(error.errors[0].message, 'Unicorn failed');
 });
 
 test.serial('set `exitOnError` to false in root', async t => {
-	t.plan(17);
+	t.plan(18);
 
 	const list = new Listr([
 		{
@@ -161,18 +155,16 @@ test.serial('set `exitOnError` to false in root', async t => {
 		'done',
 	]);
 
-	try {
-		await list.run();
-	} catch (error) {
-		t.is(error.name, 'ListrError');
-		t.is(error.errors.length, 2);
-		t.is(error.errors[0].message, 'Foo failed');
-		t.is(error.errors[1].message, 'Unicorn failed');
-	}
+	const error = await t.throwsAsync(list.run());
+
+	t.is(error.name, 'ListrError');
+	t.is(error.errors.length, 2);
+	t.is(error.errors[0].message, 'Foo failed');
+	t.is(error.errors[1].message, 'Unicorn failed');
 });
 
 test.serial('set `exitOnError` to false in root and true in child', async t => {
-	t.plan(16);
+	t.plan(17);
 
 	const list = new Listr([
 		{
@@ -218,18 +210,16 @@ test.serial('set `exitOnError` to false in root and true in child', async t => {
 		'done',
 	]);
 
-	try {
-		await list.run();
-	} catch (error) {
-		t.is(error.name, 'ListrError');
-		t.is(error.errors.length, 2);
-		t.is(error.errors[0].message, 'Foo failed');
-		t.is(error.errors[1].message, 'Unicorn failed');
-	}
+	const error = await t.throwsAsync(list.run());
+
+	t.is(error.name, 'ListrError');
+	t.is(error.errors.length, 2);
+	t.is(error.errors[0].message, 'Foo failed');
+	t.is(error.errors[1].message, 'Unicorn failed');
 });
 
 test.serial('exit on error throws error object with context', async t => {
-	t.plan(10);
+	t.plan(11);
 
 	const list = new Listr([
 		{
@@ -238,7 +228,7 @@ test.serial('exit on error throws error object with context', async t => {
 		},
 		{
 			title: 'bar',
-			task: ctx => {
+			task(ctx) {
 				ctx.foo = 'bar';
 			},
 		},
@@ -256,12 +246,10 @@ test.serial('exit on error throws error object with context', async t => {
 		'done',
 	]);
 
-	try {
-		await list.run();
-	} catch (error) {
-		t.is(error.name, 'ListrError');
-		t.is(error.errors.length, 1);
-		t.is(error.errors[0].message, 'Foo failed');
-		t.deepEqual(error.context, {foo: 'bar'});
-	}
+	const error = await t.throwsAsync(list.run());
+
+	t.is(error.name, 'ListrError');
+	t.is(error.errors.length, 1);
+	t.is(error.errors[0].message, 'Foo failed');
+	t.deepEqual(error.context, {foo: 'bar'});
 });

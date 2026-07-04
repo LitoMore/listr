@@ -1,5 +1,4 @@
 import test from 'ava';
-import {Observable as RxObservable} from 'rxjs';
 import ZenObservable from 'zen-observable';
 import {isListr, isObservable} from '../lib/utils.js';
 import Listr from '../index.js';
@@ -16,6 +15,5 @@ test('isObservable', t => {
 	t.false(isObservable({}));
 	t.false(isObservable(new Listr([])));
 	t.false(isObservable(new Promise(() => {})));
-	t.true(isObservable(new RxObservable(() => {})));
 	t.true(isObservable(new ZenObservable(() => {})));
 });

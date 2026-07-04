@@ -7,7 +7,7 @@ test('create', t => {
 
 	let list;
 
-	list = new Listr([{title: 'foo', task: () => {}}]);
+	list = new Listr([{title: 'foo', task() {}}]);
 	t.is(list._tasks.length, 1);
 	t.true(list._options.showSubtasks);
 	t.false(list._options.concurrent);
@@ -17,7 +17,7 @@ test('create', t => {
 	t.false(list._options.showSubtasks);
 	t.true(list._options.concurrent);
 
-	list = new Listr([{title: 'foo', task: () => {}}], {showSubtasks: false, concurrent: true});
+	list = new Listr([{title: 'foo', task() {}}], {showSubtasks: false, concurrent: true});
 	t.is(list._tasks.length, 1);
 	t.false(list._options.showSubtasks);
 	t.true(list._options.concurrent);
@@ -28,12 +28,12 @@ test('throw error if task properties are wrong', t => {
 	t.throws(() => new Listr([{title: 5}]), {message: 'Expected property `title` to be of type `string`, got `number`'});
 	t.throws(() => new Listr([{title: 'foo'}]), {message: 'Expected property `task` to be of type `function`, got `undefined`'});
 	t.throws(() => new Listr([{title: 'foo', task: 'bar'}]), {message: 'Expected property `task` to be of type `function`, got `string`'});
-	t.throws(() => new Listr([{title: 'foo', task: () => {}, skip: 5}]), {message: 'Expected property `skip` to be of type `function`, got `number`'});
-	t.throws(() => new Listr([{title: 'foo', task: () => {}, enabled: 5}]), {message: 'Expected property `enabled` to be of type `function`, got `number`'});
+	t.throws(() => new Listr([{title: 'foo', task() {}, skip: 5}]), {message: 'Expected property `skip` to be of type `function`, got `number`'});
+	t.throws(() => new Listr([{title: 'foo', task() {}, enabled: 5}]), {message: 'Expected property `enabled` to be of type `function`, got `number`'});
 });
 
 test('throw error if a task object is provided', t => {
-	t.throws(() => new Listr({title: 'foo', task: () => {}}), {message: 'Expected an array of tasks or an options object, got a task object'});
+	t.throws(() => new Listr({title: 'foo', task() {}}), {message: 'Expected an array of tasks or an options object, got a task object'});
 });
 
 test('`.addTask()` throws if task properties are wrong', t => {
@@ -43,8 +43,8 @@ test('`.addTask()` throws if task properties are wrong', t => {
 	t.throws(list.add.bind(list, {title: 5}), {message: 'Expected property `title` to be of type `string`, got `number`'});
 	t.throws(list.add.bind(list, {title: 'foo'}), {message: 'Expected property `task` to be of type `function`, got `undefined`'});
 	t.throws(list.add.bind(list, {title: 'foo', task: 'bar'}), {message: 'Expected property `task` to be of type `function`, got `string`'});
-	t.throws(list.add.bind(list, {title: 'foo', task: () => {}, skip: 5}), {message: 'Expected property `skip` to be of type `function`, got `number`'});
-	t.throws(list.add.bind(list, {title: 'foo', task: () => {}, enabled: 5}), {message: 'Expected property `enabled` to be of type `function`, got `number`'});
+	t.throws(list.add.bind(list, {title: 'foo', task() {}, skip: 5}), {message: 'Expected property `skip` to be of type `function`, got `number`'});
+	t.throws(list.add.bind(list, {title: 'foo', task() {}, enabled: 5}), {message: 'Expected property `enabled` to be of type `function`, got `number`'});
 });
 
 test('throw error if task rejects', async t => {
@@ -66,7 +66,7 @@ test('throw error if task throws', async t => {
 	const list = new Listr([
 		{
 			title: 'foo',
-			task: () => {
+			task() {
 				throw new Error('foo bar');
 			},
 		},
@@ -84,7 +84,7 @@ test('throw error if task skip rejects', async t => {
 		{
 			title: 'foo',
 			skip: () => Promise.reject(new Error('skip foo')),
-			task: () => {},
+			task() {},
 		},
 	], {renderer: 'silent'}, {renderer: 'silent'});
 
@@ -95,10 +95,10 @@ test('throw error if task skip throws', async t => {
 	const list = new Listr([
 		{
 			title: 'foo',
-			skip: () => {
+			skip() {
 				throw new Error('skip foo');
 			},
-			task: () => {},
+			task() {},
 		},
 	], {renderer: 'silent'});
 
@@ -124,12 +124,12 @@ test('execute tasks', async t => {
 
 test('add tasks', t => {
 	const list = new Listr()
-		.add({title: 'foo', task: () => {}})
+		.add({title: 'foo', task() {}})
 		.add([
-			{title: 'hello', task: () => {}},
-			{title: 'world', task: () => {}},
+			{title: 'hello', task() {}},
+			{title: 'world', task() {}},
 		])
-		.add({title: 'bar', task: () => {}});
+		.add({title: 'bar', task() {}});
 
 	t.is(list._tasks.length, 4);
 });
@@ -138,17 +138,17 @@ test('context', async t => {
 	const list = new Listr([
 		{
 			title: 'foo',
-			task: context => {
+			task(context) {
 				context.foo = 'bar';
 			},
 		},
 		{
 			title: 'unicorn',
-			task: context => {
+			task(context) {
 				t.is(context.foo, 'bar');
 			},
 		},
-	]);
+	], {renderer: 'silent'});
 
 	const result = await list.run();
 
@@ -164,7 +164,7 @@ test('subtask context', async t => {
 			task: () => new Listr([
 				{
 					title: 'subfoo',
-					task: context => {
+					task(context) {
 						t.is(context.foo, 'bar');
 						context.fiz = 'biz';
 					},
@@ -173,11 +173,11 @@ test('subtask context', async t => {
 		},
 		{
 			title: 'bar',
-			task: context => {
+			task(context) {
 				t.is(context.fiz, 'biz');
 			},
 		},
-	]);
+	], {renderer: 'silent'});
 
 	const result = await list.run({foo: 'bar'});
 
@@ -191,7 +191,7 @@ test('context is attached to error object', async t => {
 	const list = new Listr([
 		{
 			title: 'foo',
-			task: context => {
+			task(context) {
 				context.foo = 'bar';
 			},
 		},
@@ -199,15 +199,12 @@ test('context is attached to error object', async t => {
 			title: 'unicorn',
 			task: () => Promise.reject(new Error('foo bar')),
 		},
-	]);
+	], {renderer: 'silent'});
 
-	try {
-		await list.run();
-		t.fail('Should throw error');
-	} catch (error) {
-		t.is(error.message, 'foo bar');
-		t.deepEqual(error.context, {
-			foo: 'bar',
-		});
-	}
+	const error = await t.throwsAsync(list.run());
+
+	t.is(error.message, 'foo bar');
+	t.deepEqual(error.context, {
+		foo: 'bar',
+	});
 });

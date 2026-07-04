@@ -134,20 +134,20 @@ test('skip context object', async t => {
 	const list = new Listr([
 		{
 			title: 'foo',
-			task: ctx => {
+			task(ctx) {
 				ctx.foo = 'bar';
 			},
 		},
 		{
 			title: 'bar',
-			skip: ctx => {
+			skip(ctx) {
 				t.is(ctx.foo, 'bar');
 			},
-			task: ctx => {
+			task(ctx) {
 				t.is(ctx.foo, 'bar');
 			},
 		},
-	]);
+	], {renderer: 'silent'});
 
 	await list.run();
 });

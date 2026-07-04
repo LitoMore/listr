@@ -1,5 +1,5 @@
 import test from 'ava';
-import {Observable} from 'rxjs';
+import Observable from 'zen-observable';
 import Listr from '../index.js';
 import SimpleRenderer from './fixtures/simple-renderer.js';
 import {testOutput} from './fixtures/utils.js';

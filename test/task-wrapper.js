@@ -7,7 +7,7 @@ test.serial('changing the title during task execution', async t => {
 	const list = new Listr([
 		{
 			title: 'foo',
-			task: (ctx, task) => {
+			task(ctx, task) {
 				task.title = 'foo bar';
 			},
 		},
@@ -27,7 +27,7 @@ test.serial('changing the output during task execution', async t => {
 	const list = new Listr([
 		{
 			title: 'foo',
-			task: (ctx, task) => {
+			task(ctx, task) {
 				task.output = 'some output';
 			},
 		},
@@ -47,7 +47,7 @@ test.serial('skip task during task execution with no message', async t => {
 	const list = new Listr([
 		{
 			title: 'foo',
-			task: (ctx, task) => {
+			task(ctx, task) {
 				task.skip();
 			},
 		},
@@ -66,7 +66,7 @@ test.serial('skip task during task execution with message', async t => {
 	const list = new Listr([
 		{
 			title: 'foo',
-			task: (ctx, task) => {
+			task(ctx, task) {
 				task.skip('foo bar');
 			},
 		},
@@ -89,7 +89,7 @@ test.serial('skip subtask', async t => {
 			task: () => new Listr([
 				{
 					title: 'bar',
-					task: (ctx, task) => {
+					task(ctx, task) {
 						task.skip('foo bar');
 					},
 				},

@@ -10,7 +10,7 @@ test('renderer class', async t => {
 			task: () => new Listr([
 				{
 					title: 'bar',
-					task: () => {},
+					task() {},
 				},
 			]),
 		},

@@ -46,12 +46,12 @@ const render = tasks => {
 };
 
 class SimpleRenderer {
-	constructor(tasks) {
-		this._tasks = tasks;
-	}
-
 	static get nonTTY() {
 		return true;
+	}
+
+	constructor(tasks) {
+		this._tasks = tasks;
 	}
 
 	render() {

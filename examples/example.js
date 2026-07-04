@@ -1,8 +1,8 @@
 import process from 'node:process';
-import {Observable} from 'rxjs';
+import Observable from 'zen-observable';
 import logSymbols from 'log-symbols';
 import delay from 'delay';
-import Listr from '.';
+import Listr from '../index.js';
 
 const renderer = process.argv[2];
 
@@ -71,6 +71,8 @@ const tasks = new Listr([
 	renderer,
 });
 
-tasks.run().catch(error => {
+try {
+	await tasks.run();
+} catch (error) {
 	console.error(error.message);
-});
+}

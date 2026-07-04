@@ -16,7 +16,7 @@ test('output', async t => {
 			task: () => new Listr([
 				{
 					title: 'bar',
-					task: () => fs.createReadStream(path.join(__dirname, 'fixtures/data.txt'), 'utf8').pipe(split(/\r?\n/, null, {trailing: false})),
+					task: () => fs.createReadStream(path.join(__dirname, 'fixtures/data.txt'), 'utf8').pipe(split(/\r?\n/v, null, {trailing: false})),
 				},
 			]),
 		},

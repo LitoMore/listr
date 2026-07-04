@@ -9,69 +9,63 @@
 
 ## Install
 
-```
+```sh
 $ npm install --save listr
 ```
 
 
 ## Usage
 
-```js
+```jsx
 import execa from 'execa';
-import Listr from 'listr';
+import {render, useApp} from 'ink';
+import {Task, TaskList} from 'listr';
 
-const tasks = new Listr([
-	{
-		title: 'Git',
-		task: () => {
-			return new Listr([
-				{
-					title: 'Checking git status',
-					task: () => execa.stdout('git', ['status', '--porcelain']).then(result => {
+const App = () => {
+	const {exit} = useApp();
+
+	return (
+		<TaskList onComplete={exit} onError={exit}>
+			<Task title="Git" concurrent>
+				<Task
+					title="Checking git status"
+					task={() => execa.stdout('git', ['status', '--porcelain']).then(result => {
 						if (result !== '') {
 							throw new Error('Unclean working tree. Commit or stash changes first.');
 						}
-					})
-				},
-				{
-					title: 'Checking remote history',
-					task: () => execa.stdout('git', ['rev-list', '--count', '--left-only', '@{u}...HEAD']).then(result => {
+					})}
+				/>
+				<Task
+					title="Checking remote history"
+					task={() => execa.stdout('git', ['rev-list', '--count', '--left-only', '@{u}...HEAD']).then(result => {
 						if (result !== '0') {
 							throw new Error('Remote history differ. Please pull changes.');
 						}
-					})
-				}
-			], {concurrent: true});
-		}
-	},
-	{
-		title: 'Install package dependencies with Yarn',
-		task: (ctx, task) => execa('yarn')
-			.catch(() => {
-				ctx.yarn = false;
+					})}
+				/>
+			</Task>
+			<Task
+				title="Install package dependencies with Yarn"
+				task={(ctx, task) => execa('yarn').catch(() => {
+					ctx.yarn = false;
+					task.skip('Yarn not available, install it via `npm install -g yarn`');
+				})}
+			/>
+			<Task
+				title="Install package dependencies with npm"
+				enabled={ctx => ctx.yarn === false}
+				task={() => execa('npm', ['install'])}
+			/>
+			<Task title="Run tests" task={() => execa('npm', ['test'])} />
+			<Task title="Publish package" task={() => execa('npm', ['publish'])} />
+		</TaskList>
+	);
+};
 
-				task.skip('Yarn not available, install it via `npm install -g yarn`');
-			})
-	},
-	{
-		title: 'Install package dependencies with npm',
-		enabled: ctx => ctx.yarn === false,
-		task: () => execa('npm', ['install'])
-	},
-	{
-		title: 'Run tests',
-		task: () => execa('npm', ['test'])
-	},
-	{
-		title: 'Publish package',
-		task: () => execa('npm', ['publish'])
-	}
-]);
-
-tasks.run().catch(err => {
-	console.error(err);
-});
+render(<App />);
 ```
+
+The default export still provides the original `new Listr(tasks).run()` API for programmatic usage.
 
 
 ## Task
@@ -121,7 +115,7 @@ A `task` can also return an `Observable`. The thing about observables is that it
 task. Please note that only the last line of the output is rendered.
 
 ```js
-import {Observable} from 'rxjs';
+import Observable from 'zen-observable';
 
 const tasks = new Listr([
 	{
@@ -147,7 +141,7 @@ const tasks = new Listr([
 ]);
 ```
 
-You can use the `Observable` package you feel most comfortable with, like [RxJS](https://www.npmjs.com/package/rxjs) or [zen-observable](https://www.npmjs.com/package/zen-observable).
+You can use the `Observable` package you feel most comfortable with, like [RxJS](https://www.npmjs.com/package/rxjs) or [zen-observable](https://www.npmjs.com/package/zen-observable). Listr detects compatible Observables without depending on RxJS itself.
 
 ### Streams
 
@@ -297,7 +291,18 @@ tasks.run();
 ```
 
 
-## Custom renderers
+## Renderers
+
+The built-in `default` and `verbose` renderers are powered by [Ink](https://www.npmjs.com/package/ink). The default renderer shows a live task tree in TTY environments. Non-TTY output falls back to the verbose renderer unless `nonTTYRenderer` is configured.
+
+The built-in renderers support these options:
+
+- `showSubtasks`: Show subtasks in the default renderer. Defaults to `true`.
+- `collapse`: Collapse completed subtasks in the default renderer. Defaults to `true`.
+- `clearOutput`: Clear successful default renderer output when tasks finish. Defaults to `false`.
+- `dateFormat`: Show timestamps in the verbose renderer. Set to `false` to disable timestamps.
+
+### Custom Renderers
 
 It's possible to write custom renderers for Listr. A renderer is an ES6 class that accepts the tasks that it should render, and the Listr options object. It has two methods, the `render` method which is called when it should start rendering, and the `end` method. The `end` method is called when all the tasks are completed or if a task failed. If a task failed, the error object is passed in via an argument.
 
@@ -315,7 +320,7 @@ class CustomRenderer {
 	end(err) { }
 }
 
-module.exports = CustomRenderer;
+export default CustomRenderer;
 ```
 
 > Note: A renderer is not passed through to the subtasks, only to the main task. It is up to you to handle that case.
@@ -359,15 +364,13 @@ class CustomRenderer {
 	end(err) { }
 }
 
-module.exports = CustomRenderer;
+export default CustomRenderer;
 ```
-
-If you want more complex examples, take a look at the [update](https://github.com/SamVerschueren/listr-update-renderer) and [verbose](https://github.com/SamVerschueren/listr-verbose-renderer) renderers.
 
 
 ## API
 
-### Listr([tasks], [options])
+### Listr(\[tasks], \[options])
 
 #### tasks
 
@@ -395,7 +398,7 @@ Skip function. Read more about [skipping tasks](#skipping-tasks).
 
 #### options
 
-Any renderer specific options. For instance, when using the `update-renderer`, you can pass in all of its [options](https://github.com/SamVerschueren/listr-update-renderer#options).
+Any renderer specific options. Built-in renderer options are documented in [Renderers](#renderers).
 
 ##### concurrent
 
@@ -438,7 +441,7 @@ Type: `object` `object[]`
 
 Task object or multiple task objects.
 
-#### run([context])
+#### run(\[context])
 
 Start executing the tasks. Returns a `Promise` for the context object.
 
